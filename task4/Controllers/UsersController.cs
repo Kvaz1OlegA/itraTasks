@@ -13,7 +13,6 @@ namespace task4.Controllers
     {
         private readonly UserManager<User> _userManager;
         private readonly SignInManager<User> _signInManager;
-        public User CurrentUser { get; set; }
 
         public UsersController(UserManager<User> userManager, SignInManager<User> signInManager)
         {
@@ -32,14 +31,13 @@ namespace task4.Controllers
         [HttpPost]
         public async Task<IActionResult> Register(RegisterViewModel model)
         {
-            CurrentUser = new User { Email = model.Email, UserName = model.Email, Name = model.Name, registrationDate = DateTime.Now, lastLoginDate = DateTime.Now, Blocked = false };
-           
+            _signInManager.Context.User.AddIdentity(model);
             if (ModelState.IsValid)
             { 
                 var result = await _userManager.CreateAsync(CurrentUser, model.Password);
                 if (result.Succeeded)
                 {
-                    await _signInManager.SignInAsync(CurrentUser, false);
+                    await _signInManager.SignInAsync(CurrentUser, true);
                     return RedirectToAction("Index", "Users");
                 }
                 else
@@ -66,7 +64,7 @@ namespace task4.Controllers
             if (ModelState.IsValid)
             {
                 var result =
-                await _signInManager.PasswordSignInAsync(model.Email, model.Password, model.RememberMe, false);
+                await _signInManager.PasswordSignInAsync(model.Email, model.Password, model.RememberMe, true);
                 if (result.Succeeded)
                 {
                     if (!CurrentUser.Blocked)
